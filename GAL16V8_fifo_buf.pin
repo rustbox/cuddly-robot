@@ -1,0 +1,25 @@
+
+
+ Pin # | Name     | Pin Type
+-----------------------------
+   1   | Clock    | Clock
+   2   | NC       | Input
+   3   | NC       | Input
+   4   | NC       | Input
+   5   | NC       | Input
+   6   | NC       | Input
+   7   | NC       | Input
+   8   | NC       | Input
+   9   | I        | Input
+  10   | GND      | GND
+  11   | /OE      | /OE
+  12   | O1       | Output
+  13   | O2       | Output
+  14   | NC       | NC
+  15   | NC       | NC
+  16   | NC       | NC
+  17   | NC       | NC
+  18   | NC       | NC
+  19   | Q        | Output
+  20   | VCC      | VCC
+

@@ -1,0 +1,24 @@
+GAL22V10  
+FifoBuf
+
+Clock NC    NC    NC    NC    NC    NC    I0    I1    I2    I3   GND
+/OE   O0    O1    O2    O3    O4    O5    O6    O7    NC    Q    VCC
+
+Q.R  = /Q
+
+; first nibble
+O0.R =  Q * O0 + /Q * I0
+O1.R =  Q * O1 + /Q * I1
+O2.R =  Q * O2 + /Q * I2
+O3.R =  Q * O3 + /Q * I3
+
+; second nibble
+O4.R = /Q * O4 +  Q * I0
+O5.R = /Q * O5 +  Q * I1
+O6.R = /Q * O6 +  Q * I2
+O7.R = /Q * O7 +  Q * I3
+
+DESCRIPTION
+
+A 4-to-8 "SIPO" (serial-in, parallel-out) shift register that takes in a quad serial input and demuxes it over a 8-bit parallel output.
+

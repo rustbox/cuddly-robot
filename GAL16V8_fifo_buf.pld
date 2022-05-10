@@ -1,0 +1,14 @@
+GAL16V8
+FifoBuf
+
+Clock NC    NC    NC    NC    NC    NC    NC    I    GND
+/OE   O1    O2    NC    NC    NC    NC    NC    Q    VCC
+
+Q.R  = /Q
+O1.R =  Q * O1 + /Q * I
+O2.R = /Q * O2 +  Q * I
+
+DESCRIPTION
+
+A 1-to-2 "SIPO" (serial-in, parallel-out) shift register that takes in a serial input and demuxes it over a pair of parallel outputs.
+
