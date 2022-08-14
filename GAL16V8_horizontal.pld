@@ -1,0 +1,18 @@
+GAL16V8
+Horizontal
+
+A9   A8    A7    A6    A5    A4    A3      A2       A1       GND
+NC   NC    A0    NC    NC    NC    EndL    Hsync    HzVis    VCC
+
+HzVis = /A9 + /A8 * A9 * /A7
+Hsync = A4 * A5 * A6 + /A4 * /A5 * /A6 + /A7 + A8 + /A9
+EndL = /A0 * /A1 * /A2 * /A3 * /A4 * A5 * /A6 * /A7 * A8 * A9
+
+DESCRIPTION
+
+Horizontal timing
+Input: [1-9]
+IO: [12-19]
+/OE: [11]
+
+Vert

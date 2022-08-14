@@ -1,0 +1,13 @@
+GAL22V10
+Test
+
+Clock NC    NC    NC    NC    NC    NC    NC    NC    NC    NC   GND
+/OE   NC    NC    NC    NC    NC    NC    NC    NC    NC    Q    VCC
+
+Q = /Clock
+
+
+DESCRIPTION
+
+A NOT gate
+
