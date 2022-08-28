@@ -23,7 +23,7 @@
   19   | O5       | Output
   20   | O6       | Output
   21   | O7       | Output
-  22   | NC       | NC
-  23   | Q        | Output
+  22   | Rdy      | Output
+  23   | Half     | Output
   24   | VCC      | VCC
 

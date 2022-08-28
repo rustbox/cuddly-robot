@@ -1,24 +1,34 @@
 GAL22V10  
-FifoBuf
+SIPO4to8
 
-Clock NC    NC    NC    NC    NC    NC    I0    I1    I2    I3   GND
-/OE   O0    O1    O2    O3    O4    O5    O6    O7    NC    Q    VCC
+Clock NC    NC    NC    NC    NC    NC    I0    I1    I2      I3      GND
+/OE   O0    O1    O2    O3    O4    O5    O6    O7    Rdy    Half    VCC
 
-Q.R  = /Q
+; The value of Half is /Half once the clock is pulsed
+Half.R  = /Half
 
 ; first nibble
-O0.R =  Q * O0 + /Q * I0
-O1.R =  Q * O1 + /Q * I1
-O2.R =  Q * O2 + /Q * I2
-O3.R =  Q * O3 + /Q * I3
+O0.R =  Half * O0 + /Half * I0
+O1.R =  Half * O1 + /Half * I1
+O2.R =  Half * O2 + /Half * I2
+O3.R =  Half * O3 + /Half * I3
 
 ; second nibble
-O4.R = /Q * O4 +  Q * I0
-O5.R = /Q * O5 +  Q * I1
-O6.R = /Q * O6 +  Q * I2
-O7.R = /Q * O7 +  Q * I3
+O4.R = /Half * O4 +  Half * I0
+O5.R = /Half * O5 +  Half * I1
+O6.R = /Half * O6 +  Half * I2
+O7.R = /Half * O7 +  Half * I3
+
+; The Rdy line is active low, and indicates when the full byte
+; is loaded onto the outputs I0-7 and ready to be read. This will
+; operate for a half cycle of Clock (as it goes low) just after
+; the second nibble is loaded. The next Clock tick (going high)
+; the data is no longer valid, and the first nibble is being loaded
+; again.
+
+Rdy = Half * Clock
 
 DESCRIPTION
 
-A 4-to-8 "SIPO" (serial-in, parallel-out) shift register that takes in a quad serial input and demuxes it over a 8-bit parallel output.
+A 4-to-8 "SIPO" (serial-in, parallel-out) shift register that takes in a Halfuad serial input and demuxes it over a 8-bit parallel output.
 

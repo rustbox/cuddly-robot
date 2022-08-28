@@ -1,0 +1,30 @@
+GAL22V10  
+Color
+
+NC   A7    A6    A5    A4    A3    A2    A1    A0    NC    NC   GND
+NC   B2    B1    B0    G2    G1    G0    R2    R1    R0    NC    VCC
+
+R0 = A7
+R1 = A0
+R2 = A1
+
+G0 = A2
+G1 = A3
+G2 = A4
+
+B0 = A5
+B1 = A6
+B2 = A7
+
+DESCRIPTION
+Color Lookup
+
+This performs a left circular shift, essentially multiplying
+the input by 2.
+
+index:     A7, A6, A5, A4, A3, A2, A1, A0
+value: C8, C7, C6, C5, C4, C3, C2, C1, C0
+color: B2, B1, B0, G2, G1, B0, R2, R1, R0
+
+circle-shift left
+    -> A7  A6, A5, A4, A3, A2, A1, A0, A7
