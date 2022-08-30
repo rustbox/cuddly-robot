@@ -26,7 +26,7 @@ O7.R = /Half * O7 +  Half * I3
 ; the data is no longer valid, and the first nibble is being loaded
 ; again.
 
-Rdy = Half + Clock
+Rdy = Half * /Clock + /Half * Clock
 
 DESCRIPTION
 
