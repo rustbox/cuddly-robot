@@ -1,16 +1,98 @@
 GAL16V8
 Horizontal
 
-A9   A8    A7    A6    A5    A4    A3      A2       A1       GND
-NC   NC    A0    NC    NC    NC    EndL    Hsync    HzVis    VCC
+Clock   Q5    NC    NC    NC    NC    NC      NC       NC    GND
+NC      Q10   Q9    Q8    Q7    Q6    EndL    Hsync    HVis  VCC
 
-HzVis = /A6 * /A7 * /A9 + /A8 * /A9
-Hsync = A3 * A4 * A5 + /A3 * /A4 * /A5 + /A6 + A7 + /A8 + A9
-EndL = /A0 * /A1 * /A2 * /A3 * A4 * /A5 * /A6 * A7 * A8 * /A9
+; A synchronous counter (clocked by Q4).
+
+; We take Q5 as input to preserve an output for HVis,
+; at the cost of needing a 5-bit input, registering all 
+; the outputs and introducing an off-by-one issue at the 
+; counter reset, see below.
+;
+; To switch to a 4-bit input, replace HVis with Q5, 
+; uncomment this line, and de-register (delete the .R
+; suffix from) HSync and EndL.
+;
+; Q5.R = /Q5 * /EndL
+
+Q6.R = /Q6 * Q5 * /EndL     
+    + Q6 * /Q5 * /EndL
+Q7.R = /Q7 * Q6 * Q5 * /EndL
+    + Q7 * /Q6 * /EndL
+    + Q7 * Q6 * /Q5 * /EndL
+Q8.R = /Q8 * Q7 * Q6 * Q5 * /EndL
+    + Q8 * /Q7 * /EndL
+    + Q8 * Q7 * /Q6 * /EndL
+    + Q8 * Q7 * Q6 * /Q5 * /EndL
+Q9.R = /Q9 * Q8 * Q7 * Q6 * Q5 * /EndL
+    + Q9 * /Q8 * /EndL
+    + Q9 * Q8 * /Q7 * /EndL
+    + Q9 * Q8 * Q7 * /Q6 * /EndL
+    + Q9 * Q8 * Q7 * Q6 * /Q5 * /EndL
+Q10.R = /Q10 * Q9 * Q8 * Q7 * Q6 * Q5 * /EndL
+    + Q10 * /Q9 * /EndL
+    + Q10 * Q9 * /Q8 * /EndL
+    + Q10 * Q9 * Q8 * /Q7 * /EndL
+    + Q10 * Q9 * Q8 * Q7 * /Q6 * /EndL
+    + Q10 * Q9 * Q8 * Q7 * Q6 * /Q5 * /EndL
+
+; Frame Start
+
+HVis.R = /Q10                               ; 0b0xxxxx  D < 32        (32)
+    + Q10 * /Q9 * /Q8                       ; 0b100xxx  32 <= D < 40  ( 8)
+    ; v fix a little off-by-one, everything's fine
+    + Q10 * Q9 * /Q8 * /Q7 * Q6 * /Q5       ;  
+    ; ^ 0x110010, alternate spelling of 0b000000, see description
+
+; Front Porch                               ; 0b101000  D = 40        ( 1)
+
+/Hsync.R = Q10 * /Q9 * Q8 * /Q7 * /Q6 * Q5  ; 0b101001  D = 41        ( 1)        
+    + Q10 * /Q9 * Q8 * /Q7 * Q6 * /Q5       ; 0b101010  D = 42        ( 1)
+    + Q10 * /Q9 * Q8 * /Q7 * Q6 * Q5        ; 0b101011  D = 43        ( 1)
+    + Q10 * /Q9 * Q8 * Q7 * /Q6 * /Q5       ; 0b101100  D = 44        ( 1)
+    + Q10 * /Q9 * Q8 * Q7 * /Q6 * Q5        ; 0b101101  D = 45        ( 1)
+    + Q10 * /Q9 * Q8 * Q7 * Q6 * /Q5        ; 0b101110  D = 46        ( 1)
+
+; Back Porch                                ; 0b101111  D = 47        ( 1)
+                                            ; 0b11000x  48 <= D < 50  ( 2)
+
+                                            ;                         ----                 
+                                            ;                         (50)
+EndL.R   = Q10 * Q9 * /Q8 * /Q7 * /Q6 * Q5  ; 0b110001  D = 49        
+
+; EndL has to be registered to cover the phase variance
+; from Q5, but this does mean we spell zero "50" (0b110010)
+; because the reset on {Q10..Q6} is one clock delayed.
 
 DESCRIPTION
 
 Horizontal timing
-HViz: D < 320
-HSync: D >= 328, D < 376
-End: D == 400
+
+D = {Q10..Q5} (counting in 16s, 1-indexed LSB)
+
+HViz: D < 40 (< 0b101000)
+    (front porch) D = 40 (0b101000)
+HSync: D >= 41, D < 46 (0b101001 to 0b101111, so 0b10101x 0b1011xx)
+    (back porch) D = 47, 48, 49
+EndL: D == 49 (0b110001)
+
+0..49 is 50 16-pixel blocks in total
+
+(with Q5 as an input, necessitating registering the EndL output, we actually 
+count {50,1..49} after the first frame because our reset is delayed one cycle)
+
+In order to have enough outputs on the V8, we take both the clock (at "Q4"
+speed, 1.5734MHz) and LSB of our 6-bit counter "Q5" as inputs. We expect
+to be driven by a >=5-bit "ripple" (asynchronous) counter chip, which is 
+why any output driven by Q5 needs to be registered (because Q5 will be 
+slightly out of phase with our clock). Since EndL is registered, our reset
+is delayed, and HVis has to account for zero being spelled both 0b00000 (0) 
+and 0b110010 (50).
+
+One potential modification is to hoist the "hvis" logic over to the vertical
+chip (which has room for the 3 inputs at the cost of a distinct VertVis 
+output), which would allow this chip's logic to be driven only by a 4-bit counter
+as the Clock input. In doing so it would be important to de-register EndL so
+D counts from 0..49 again (else, HVis needs all 6 bits as input).
