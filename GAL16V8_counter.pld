@@ -1,0 +1,89 @@
+GAL16V8
+Counter
+
+Clock NC    NC    NC    NC    NC    NC    NC    Rst    GND
+/OE   A0    A1    A2    A3    A4    A5    A6    A7    VCC
+
+A0.R = /A0
+
+; 0 0 -> 0 1
+; 0 1 -> 1 0 *
+; 1 0 -> 1 1 *
+; 1 1 -> 0 0
+A1.R = /A1 * A0 + A1 * /A0
+
+; 0 1 1 -> 1 0 0
+; 1 0 0 -> 1 0 1
+; 1 0 1 -> 1 1 0
+; 1 1 0 -> 1 1 1
+A2.R = /A2 * A1 * A0 + A2 * /A1 + A2 * /A0
+
+; 0 1 1 1
+; 1 0 x x
+; 1 x 0 x
+; 1 x x 0
+A3.R = /A3 * A2 * A1 * A0
+    + A3 * /A2
+    + A3 * /A1
+    + A3 * /A0
+
+; 0 1 1 1 1
+; 1 0 x x x
+; 1 x 0 x x
+; 1 x x 0 x
+; 1 x x x 0
+A4.R = /A4 * A3 * A2 * A1 * A0
+    + A4 * /A3
+    + A4 * /A2
+    + A4 * /A1
+    + A4 * /A0
+
+; 0 1 1 1 1 1
+; 1 0 x x x x
+; 1 x 0 x x x
+; 1 x x 0 x x
+; 1 x x x 0 x
+; 1 x x x x 0
+A5.R = /A5 * A4 * A3 * A2 * A1 * A0
+    + A5 * /A4
+    + A5 * /A3
+    + A5 * /A2
+    + A5 * /A1
+    + A5 * /A0
+
+; 0 1 1 1 1 1 1
+; 1 0 x x x x x
+; 1 x 0 x x x x
+; 1 x x 0 x x x
+; 1 x x x 0 x x
+; 1 x x x x 0 x
+; 1 x x x x x 0
+A6.R = /A6 * A5 * A4 * A3 * A2 * A1 * A0
+    + A6 * /A5
+    + A6 * /A4
+    + A6 * /A3
+    + A6 * /A2
+    + A6 * /A1
+    + A6 * /A0
+
+; 0 1 1 1 1 1 1 1
+; 1 0 x x x x x x
+; 1 x 0 x x x x x
+; 1 x x 0 x x x x
+; 1 x x x 0 x x x
+; 1 x x x x 0 x x
+; 1 x x x x x 0 x
+; 1 x x x x x x 0
+A7.R = /A7 * A6 * A5 * A4 * A3 * A2 * A1 * A0
+    + A7 * /A6
+    + A7 * /A5
+    + A7 * /A4
+    + A7 * /A3
+    + A7 * /A2
+    + A7 * /A1
+    + A7 * /A0
+
+
+DESCRIPTION
+
+An 8-bit Synchronous counter
