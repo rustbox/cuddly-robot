@@ -1,21 +1,112 @@
 GAL16V8
 Vertical
 
-A9    A8       A7    A6     A5    A4        A3         A2       A1      GND
-NC   LastLine    A0    Hvis   Vis   VsTemp    VertVis    Vsync    EndF    VCC
+Clock   A8        A7    A6     A5    A4    A3         A2       A1      GND
+NC      LastLine  A0    HVis   Vis   A9    VertVis    Vsync    EndF    VCC
 
-VertVis = A3 * A5 * /A8 * /A9 + /A3 * A4 * A5 * /A6 * /A9 + /A4 * /A6 * A7 * /A9 + /A5 * /A6 * A7 * /A9 + A6 * /A8 * /A9 + /A7 * A8 * /A9
-VsTemp = /A1 + A2 + /A3 + A4
-Vsync = VsTemp + /A5 + /A6 + /A7 + /A8 + A9
-EndF = A0 * /A1 * A2 * A3 * /A4 * /A5 * /A6 * /A7 * /A8 * A9
-Vis = Hvis * VertVis
-LastLine = A0 * A1 * A2 * /A3 * /A4 * A5 * /A6 * /A7 * /A8 * /A9
+
+LastLine = /A9 * /A8 * /A7 * /A6 * A5 * /A4 * /A3 * A2 * A1 * A0  ; D = 39
+                                                                  ; safety: odd numbers never repeat (when settling time < clock period),
+                                                                  ;   and have "width" of exactly 1 clock pulse
+
+VertVis.R = A3 * A5 * /A8 * /A9 +                                 ; 
+    /A3 * A4 * A5 * /A6 * /A9 +                                   ;
+    /A4 * /A6 * A7 * /A9 +                                        ;
+    /A5 * /A6 * A7 * /A9 +                                        ;
+    A6 * /A8 * /A9 +                                              ;
+    /A7 * A8 * /A9                                                ;
+                                                                  ; safety: unsafe, must be registered (why?)
+
+/Vsync = /A9 * A8 * A7 * A6 * A5 * /A4 * A3 * /A2 * A1            ; 0b01_1110_101x  D = {490, 491}  
+                                                                  ; safety: can be either unregistered or registered? 491 is odd, 
+                                                                  ;   490 must be safe? no repeats before 525 anyway
+                                                                  ;   are we playing fast and loose with timing?
+                                                                  ;     we'll go 491->490 for one propagation delay, extending vsync ~7ns
+                                                                  ;     we'll also rise ~600ns "early", relative to the edge of VertVis? (the width of the clock pulse)
+
+EndF = A9 * /A8 * /A7 * /A6 * /A5 * /A4 * A3 * A2 * /A1 * A0      ; 0b10_0000_1101
+                                                                  ; safety: must be unregistered, used as reset (and so can't repeat)
+
+; Vis = HVis * VertVis 
+; ^ ghosts at D=440 when VertVis is dropping while HVis is rising  
+;
+; Vis = HVis * VertVis * /(D == 440)
+; /Vis = /(HVis * VertVis * /(D == 440))
+/Vis = /HVis + /VertVis +                                         ; Vis is low when either HVis or VertVis is low,
+    /A9 * A8 * A7 * /A6 * A5 * A4 * A3 * /A2 * /A1 * /A0          ;  or, D = 440.
+                                                                  ; safety: must be unregistered, timing sensitive, 
+                                                                  ;  crossover at D = 440 as VertVis drops
+                                                                  ;  440 appears to be safe? no repeats before 525 anyway
+
 
 DESCRIPTION
 
 Vertical timing
-Input: [1-9]
-IO: [12-19]
-/OE: [11]
 
-Vert
+D = {A0..A9} # 10-bit
+
+    (extended blanking) D < 40
+LastLine: D = 39
+VertViz: D >= 40, D < 440 (< 0b01_1110_0000)
+    (extended blanking) D >= 440, D < 480
+    (front porch) D >= 480, D < 490
+Vsync: D >= 490. D < 492  (0b01_1110_101x)
+    back porch 492 <= D < 525
+EndF: D == 525 (0b10_0000_1101)
+
+Vis: We're vertically & horizontally visible (we should be outputting pixels).
+
+0..524 is 525, 1-line increments
+
+This chip is intended to be driven by a >=10-bit, falling-edge-triggered, 
+ripple counter. Unlike the horizontal chip, we actually have plenty of time for
+the ripple counter to settle, as long as the pulse width is wide enough for
+propagation to the 10th bit (which takes ~100ns). Since this chip is intended
+to be used in concert with the horizontal logic chip, and we can use /EndL for 
+both the ripple counter's clock and our own Clock pin, we've got plenty of time
+for the number to stabilize before the rising edge of /EndL ~630ns later.
+
+That said, there are a few timing sensitive pins with that strategy: most
+notably EndF, used for reset (so it must not be registered, else we'll skip a
+clock as we hold the counter to 0 before our Clock pin rises), and Vis, which
+has to be sensitive to the rising and falling edges of HVis that happen off-
+cycle from our /EndL clock.
+
+Some possible changes
+
+Just for giggles, when the counter has time to fully settle before the next
+edge, check out how a 4-bit counter counts 0..16 (mod 2^4-1):
+
+0b0000      0
+0b0001      1
+  0b0000    0
+0b0010      2
+0b0011      3
+  0b0010    2
+  0b0000    0
+0b0100      4
+0b0101      5
+  0b0100    4
+0b0110      6
+0b0111      7
+  0b0110    6
+  0b0100    4
+  0b0000    0
+0b1000      8
+0b1001      9
+  0b1000    8
+0b1010      10
+0b1011      11
+  0b1010    10
+  0b1000    8
+0b1100      12
+0b1101      13
+  0b1100    12
+0b1110      14
+0b1111      15
+  0b1110    14
+  0b1100    12
+  0b1000    8
+0b0000      0
+
+No odd repeats, some numbers only repeat right after themselves

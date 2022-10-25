@@ -2,7 +2,7 @@
 
  Pin # | Name     | Pin Type
 -----------------------------
-   1   | A9       | Input
+   1   | Clock    | Clock
    2   | A8       | Input
    3   | A7       | Input
    4   | A6       | Input
@@ -12,12 +12,12 @@
    8   | A2       | Input
    9   | A1       | Input
   10   | GND      | GND
-  11   | NC       | Input
+  11   | NC       | /OE
   12   | LastLine | Output
   13   | A0       | Input
-  14   | Hvis     | Input
+  14   | HVis     | Input
   15   | Vis      | Output
-  16   | VsTemp   | Output
+  16   | A9       | Input
   17   | VertVis  | Output
   18   | Vsync    | Output
   19   | EndF     | Output

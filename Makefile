@@ -7,11 +7,7 @@ GALETTE := $(TOOLS_BIN)/galette
 .PHONY: generate
 generate: $(GALETTE)
 	for file in *.pld ; do \
-	  $(GALETTE) --nofuse $${file} || { \
-	  	rc=$$? ; \
-		echo error in $${file} ; \
-		exit $${rc} ; \
-	  }; \
+	  $(GALETTE) --nofuse $${file} ; \
 	done
 
 
