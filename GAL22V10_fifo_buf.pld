@@ -30,5 +30,5 @@ Rdy = /Clock * /Half
 
 DESCRIPTION
 
-A 4-to-8 "SIPO" (serial-in, parallel-out) shift register that takes in a Halfuad serial input and demuxes it over a 8-bit parallel output.
+A 4-to-8 "SIPO" (serial-in, parallel-out) shift register that takes in a Quad serial input and demuxes it over a 8-bit parallel output.
 

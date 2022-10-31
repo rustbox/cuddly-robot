@@ -1,2 +1,2 @@
 [v1]
-"galette 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = ["galette"]
+"galette 0.3.0 (git+https://github.com/rustbox/galette.git?rev=2ba00658608c4e4d1fd51d903a7799dcabe2f9cc#2ba00658608c4e4d1fd51d903a7799dcabe2f9cc)" = ["galette"]

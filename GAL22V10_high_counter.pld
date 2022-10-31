@@ -1,0 +1,136 @@
+GAL22V10  
+SIPO4to8
+
+Clock NC    NC    NC    NC    NC    NC    NC    I9    Ext     Rst     GND
+/OE   Q0    Q2    Q4    Q6    Q8    Q9    Q7    Q5    Q3     Q1     VCC
+
+AR = Rst
+
+Q0.R = /Q0
+
+; 0 1
+; 1 0
+Q1.R = /Q1 * Q0 + Q1 * /Q0
+
+; 0 1 1
+; 1 0 x
+; 1 x 0
+Q2.R = /Q2*Q1*Q0 +
+    Q2 * /Q1 +
+    Q2 * /Q0
+
+; 0 1 1 1
+; 1 0 x x
+; 1 x 0 x
+; 1 x x 0
+Q3.R = /Q3*Q2*Q1*Q0 +
+    Q3 * /Q2 +
+    Q3 * /Q1 +
+    Q3 * /Q0
+
+; 0 1 1 1 1
+; 1 0 x x x
+; 1 x 0 x x
+; 1 x x 0 x
+; 1 x x x 0
+Q4.R = /Q4*Q3*Q2*Q1*Q0 +
+    Q2 * /Q3 +
+    Q2 * /Q2 +
+    Q2 * /Q1 +
+    Q2 * /Q0
+
+; 0 1 1 1 1 1
+; 1 0 x x x x
+; 1 x 0 x x x
+; 1 x x 0 x x
+; 1 x x x 0 x
+; 1 x x x x 0
+Q5.R = /Q5*Q4*Q3*Q2*Q1*Q0 +
+    Q5 * /Q4 +
+    Q5 * /Q3 +
+    Q5 * /Q2 +
+    Q5 * /Q1 +
+    Q5 * /Q0
+
+; 0 1 1 1 1 1 1
+; 1 0 x x x x x
+; 1 x 0 x x x x
+; 1 x x 0 x x x
+; 1 x x x 0 x x
+; 1 x x x x 0 x
+; 1 x x x x x 0
+Q6.R = /Q6*Q5*Q4*Q3*Q2*Q1*Q0 +
+    Q6 * /Q5 +
+    Q6 * /Q4 +
+    Q6 * /Q3 +
+    Q6 * /Q2 +
+    Q6 * /Q1 +
+    Q6 * /Q0
+
+; 0 1 1 1 1 1 1 1
+; 1 0 x x x x x x
+; 1 x 0 x x x x x
+; 1 x x 0 x x x x
+; 1 x x x 0 x x x
+; 1 x x x x 0 x x
+; 1 x x x x x 0 x
+; 1 x x x x x x 0
+Q7.R = /Q7*Q6*Q5*Q4*Q3*Q2*Q1*Q0 +
+    Q7 * /Q6 +
+    Q7 * /Q5 +
+    Q7 * /Q4 +
+    Q7 * /Q3 +
+    Q7 * /Q2 +
+    Q7 * /Q1 +
+    Q7 * /Q0
+
+; 0 1 1 1 1 1 1 1 1
+; 1 0 x x x x x x x
+; 1 x 0 x x x x x x
+; 1 x x 0 x x x x x
+; 1 x x x 0 x x x x
+; 1 x x x x 0 x x x
+; 1 x x x x x 0 x x
+; 1 x x x x x x 0 x
+; 1 x x x x x x x 0
+Q8.R = /Q8*Q7*Q6*Q5*Q4*Q3*Q2*Q1*Q0 +
+    Q8 * /Q7 +
+    Q8 * /Q6 +
+    Q8 * /Q5 +
+    Q8 * /Q4 +
+    Q8 * /Q3 +
+    Q8 * /Q2 +
+    Q8 * /Q1 +
+    Q8 * /Q0
+
+; 0 1 1 1 1 1 1 1 1 1
+; 1 0 x x x x x x x x
+; 1 x 0 x x x x x x x
+; 1 x x 0 x x x x x x
+; 1 x x x 0 x x x x x
+; 1 x x x x 0 x x x x
+; 1 x x x x x 0 x x x
+; 1 x x x x x x 0 x x
+; 1 x x x x x x x 0 x
+; 1 x x x x x x x x 0
+Q9.R = Ext * I9 +
+    /Ext * /Q9*Q8*Q7*Q6*Q5*Q4*Q3*Q2*Q1*Q0 +
+    /Ext * Q9 * /Q8 +
+    /Ext * Q9 * /Q7 +
+    /Ext * Q9 * /Q6 +
+    /Ext * Q9 * /Q5 +
+    /Ext * Q9 * /Q4 +
+    /Ext * Q9 * /Q3 +
+    /Ext * Q9 * /Q2 +
+    /Ext * Q9 * /Q1 +
+    /Ext * Q9 * /Q0
+
+; The last bit can be controlled by the Ext input. If Ext is high, then Q9
+; should always be whatever the value of I9 is at the time of the rising clock.
+; If Ext is low then Q9 will count normally, essentially keeping its 10 bit
+; counter characteristics. 
+
+
+DESCRIPTION
+
+10 bit counter with selectable last bit

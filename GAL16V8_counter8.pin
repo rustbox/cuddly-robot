@@ -3,23 +3,23 @@
  Pin # | Name     | Pin Type
 -----------------------------
    1   | Clock    | Clock
-   2   | Q5       | Input
+   2   | NC       | Input
    3   | NC       | Input
    4   | NC       | Input
    5   | NC       | Input
    6   | NC       | Input
    7   | NC       | Input
    8   | NC       | Input
-   9   | NC       | Input
+   9   | R        | Input
   10   | GND      | GND
-  11   | NC       | /OE
-  12   | Q10      | Output
-  13   | Q9       | Output
-  14   | Q8       | Output
-  15   | Q7       | Output
-  16   | Q6       | Output
-  17   | EndL     | Output
-  18   | Hsync    | Output
-  19   | HVis     | Output
+  11   | /OE      | /OE
+  12   | Q7       | Output
+  13   | Q6       | Output
+  14   | Q5       | Output
+  15   | Q4       | Output
+  16   | Q3       | Output
+  17   | Q2       | Output
+  18   | Q1       | Output
+  19   | Q0       | Output
   20   | VCC      | VCC
 
