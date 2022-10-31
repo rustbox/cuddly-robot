@@ -19,7 +19,7 @@ impl Default for PixelState {
 
 impl From<PixelState> for u8 {
     fn from(p: PixelState) -> u8 {
-        p.hvis as u8 | (p.hsync as u8) << 1 | (p.hvis as u8) << 2 | (p.vvis as u8) << 3 | (p.vsync as u8) << 4 | (p.frame_vis as u8) << 5 | (p.end as u8) << 6
+        p.hvis as u8 | (p.hsync as u8) << 1 | (p.vvis as u8) << 2 | (p.vsync as u8) << 3 | (p.frame_vis as u8) << 4 | (p.end as u8) << 5
     }
 }
 
@@ -65,9 +65,18 @@ fn main() {
     let endstate = PixelState { end: true, ..Default::default() };
     timing[WIDTH * HEIGHT] = endstate;
 
+    eprintln!("{:?}", timing[WIDTH * HEIGHT - 1]);
+    eprintln!("{:?}", timing[WIDTH * HEIGHT]);
+
     let mut prom_file = [0xff as u8; 32768];
     for i in 0..timing.len() {
         prom_file[i] = timing[i].into();
+        if i == WIDTH * HEIGHT - 1 {
+            eprintln!("i = {}: byte: {}", i, prom_file[i]);
+        }
+        if i == WIDTH * HEIGHT {
+            eprintln!("i = {}: byte: {}", i, prom_file[i]);
+        }
     }
 
     let _ = std::io::stdout().write_all(&prom_file);
