@@ -1,4 +1,5 @@
 
+SHELL := /bin/sh -ec
 TOOLS_ROOT := .
 TOOLS_BIN := $(TOOLS_ROOT)/bin
 GALETTE := $(TOOLS_BIN)/galette
