@@ -58,6 +58,28 @@ pub struct PinState {
 
 pub type Pins = Vec<(String, PinState)>;
 
+#[allow(dead_code)]
+fn make_clock2(initial_state: Signal, pulse_width: Duration) -> Pins {
+    fn clock(state: Signal, pulse_width: Duration) -> Box<dyn (FnOnce() -> Vec<(Step, PinState)>)> {
+        Box::new(move || {
+            return vec![(
+                pulse_width,
+                PinState {
+                    state: state,
+                    next: Box::new(clock(state.invert(), pulse_width)),
+                },
+            )];
+        })
+    }
+    return vec![(
+        "clock".to_string(),
+        PinState {
+            state: initial_state,
+            next: clock(initial_state.invert(), pulse_width),
+        },
+    )];
+}
+
 // "wire"s the output into the given inputs, forming a node in the wiring DAG
 // like clojure's `->` form
 // TODO: circuits, definitionally, are not DAGs?
@@ -102,30 +124,6 @@ fn main() {
             )
         };
         return StateFn { f: Box::new(clock) };
-    }
-
-    fn make_clock2(initial_state: Signal, pulse_width: Duration) -> Pins {
-        fn clock(
-            state: Signal,
-            pulse_width: Duration,
-        ) -> Box<dyn (FnOnce() -> Vec<(Step, PinState)>)> {
-            Box::new(move || {
-                return vec![(
-                    pulse_width,
-                    PinState {
-                        state: state,
-                        next: Box::new(clock(state.invert(), pulse_width)),
-                    },
-                )];
-            })
-        }
-        return vec![(
-            "clock".to_string(),
-            PinState {
-                state: initial_state,
-                next: clock(initial_state.invert(), pulse_width),
-            },
-        )];
     }
 
     fn make_inverter() -> Box<dyn FnMut(Signal) -> Vec<(Step, StateFn)>> {
