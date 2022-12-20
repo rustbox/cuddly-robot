@@ -89,14 +89,17 @@ pub fn wire1(
 ) -> StateFn {
     StateFn {
         f: Box::new(move || -> (Signal, Vec<(Step, StateFn)>) {
-            let (signal, steps) = (output.f)();
+            let (signal, mut steps) = (output.f)();
 
             let downstream: Vec<_> = inputs.iter_mut().map(|f| f(signal)).flatten().collect();
 
-            let mut rewired: Vec<_> = steps
-                .into_iter()
-                .map(move |(step, f)| (step, wire1(f, inputs)))
-                .collect();
+            // let mut rewired: Vec<_> = steps
+            //     .into_iter()
+            //     .map(move |(step, f)| (step, wire1(f, inputs)))
+            //     .collect();
+            let (delay, clock) = steps.pop().expect("a single clock element");
+
+            let mut rewired = vec![(delay, wire1(clock, inputs))];
 
             rewired.extend(downstream);
             (signal, rewired)
@@ -148,9 +151,10 @@ fn main() {
     // simulation state
     let mut now: Instant = 0;
     // TODO: multiple current states, with labels
-    // TODO: determinism within a run & across multiple runs?
+    // TODO: determinism within a run & across multiple runs (i.e. seeded random)?
     let clock = make_clock(Signal::High, 12_500_000 /* 80MHz */);
 
+    // TODO: what's the inverter's initial state?
     let mut root = wire1(clock, vec![make_inverter()]);
 
     let mut history = vec![];
@@ -158,13 +162,17 @@ fn main() {
         let (state, mut schedule) = (root.f)();
         history.push(("clock", now, state));
 
-        let (step, next) = schedule.pop().unwrap();
-        now += step;
+        let (inv_step, next) = schedule.pop().unwrap();
+        let (state, _) = (next.f)();
+        history.push(("inv", now + inv_step, state));
+
+        let (clock_step, next) = schedule.pop().unwrap();
+        now += clock_step;
         root = next;
     }
 
     for (label, ts, state) in history {
-        println!("{} t={:9} {:?}", label, ts, state);
+        println!("t={:9} {:8} {:?}", ts, label, state);
     }
 }
 
