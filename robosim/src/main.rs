@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, vec};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Signal {
@@ -18,16 +18,16 @@ impl Signal {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Bus {
-    lines: Vec<Signal>,
-}
+// #[derive(Debug, Clone)]
+// pub struct Bus {
+//     lines: Vec<Signal>,
+// }
 
-#[derive(Debug, Clone)]
-pub enum State {
-    Signal(Signal),
-    Bus(Bus),
-}
+// #[derive(Debug, Clone)]
+// pub enum State {
+//     Signal(Signal),
+//     Bus(Bus),
+// }
 
 // fugit::Instant can only do u32, u64. Do we need signed? idk
 // type Instant = fugit::Instant<i64, 1, 1>;
@@ -38,13 +38,48 @@ type Step = i64; // what, femtoseconds?
 
 // see https://stackoverflow.com/questions/27886474/recursive-function-type
 // TODO: generator? https://doc.rust-lang.org/beta/unstable-book/language-features/generators.html
-pub struct StateFn(Box<dyn FnOnce() -> (State, Vec<(Step, StateFn)>)>);
+pub struct StateFn {
+    f: Box<dyn FnOnce() -> (Signal, Vec<(Step, StateFn)>)>,
+}
 
 // TODO: would something like this be better?
 #[allow(dead_code)]
 pub struct _State {
-    state: State,
+    state: Signal,
     next: Box<dyn FnOnce() -> Vec<(Step, _State)>>,
+}
+
+// TODO: or this?
+#[allow(dead_code)]
+pub struct PinState {
+    pub state: Signal,
+    pub next: Box<dyn FnOnce() -> Vec<(Step, PinState)>>,
+}
+
+pub type Pins = Vec<(String, PinState)>;
+
+// "wire"s the output into the given inputs, forming a node in the wiring DAG
+// like clojure's `->` form
+// TODO: circuits, definitionally, are not DAGs?
+pub fn wire1(
+    output: StateFn,
+    mut inputs: Vec<Box<dyn FnMut(Signal) -> Vec<(Step, StateFn)>>>,
+) -> StateFn {
+    StateFn {
+        f: Box::new(move || -> (Signal, Vec<(Step, StateFn)>) {
+            let (signal, steps) = (output.f)();
+
+            let downstream: Vec<_> = inputs.iter_mut().map(|f| f(signal)).flatten().collect();
+
+            let mut rewired: Vec<_> = steps
+                .into_iter()
+                .map(move |(step, f)| (step, wire1(f, inputs)))
+                .collect();
+
+            rewired.extend(downstream);
+            (signal, rewired)
+        }),
+    }
 }
 
 fn main() {
@@ -60,13 +95,50 @@ fn main() {
     // An ideal square clock
     // (do we need to model rise/fall times?)
     fn make_clock(initial_state: Signal, pulse_width: Duration) -> StateFn {
-        let clock = move || -> (State, Vec<(Step, StateFn)>) {
-            return (
-                State::Signal(initial_state),
+        let clock = move || -> _ {
+            (
+                initial_state,
                 vec![(pulse_width, make_clock(initial_state.invert(), pulse_width))],
-            );
+            )
         };
-        return StateFn(Box::new(clock));
+        return StateFn { f: Box::new(clock) };
+    }
+
+    fn make_clock2(initial_state: Signal, pulse_width: Duration) -> Pins {
+        fn clock(
+            state: Signal,
+            pulse_width: Duration,
+        ) -> Box<dyn (FnOnce() -> Vec<(Step, PinState)>)> {
+            Box::new(move || {
+                return vec![(
+                    pulse_width,
+                    PinState {
+                        state: state,
+                        next: Box::new(clock(state.invert(), pulse_width)),
+                    },
+                )];
+            })
+        }
+        return vec![(
+            "clock".to_string(),
+            PinState {
+                state: initial_state,
+                next: clock(initial_state.invert(), pulse_width),
+            },
+        )];
+    }
+
+    fn make_inverter() -> Box<dyn FnMut(Signal) -> Vec<(Step, StateFn)>> {
+        Box::new(move |input: Signal| -> _ {
+            vec![(
+                6_000_000, // 6ns gate delay
+                StateFn {
+                    f: Box::new(move || -> (Signal, Vec<(Step, StateFn)>) {
+                        (input.invert(), vec![])
+                    }),
+                },
+            )]
+        })
     }
 
     let mut total_steps = 6;
@@ -78,15 +150,19 @@ fn main() {
     // simulation state
     let mut now: Instant = 0;
     // TODO: multiple current states, with labels
-    let mut clock = make_clock(Signal::High, 12_500_000 /* 80MHz */);
+    // TODO: determinism within a run & across multiple runs?
+    let clock = make_clock(Signal::High, 12_500_000 /* 80MHz */);
+
+    let mut root = wire1(clock, vec![make_inverter()]);
+
     let mut history = vec![];
     while simulate() {
-        let (state, mut schedule) = clock.0();
+        let (state, mut schedule) = (root.f)();
         history.push(("clock", now, state));
 
         let (step, next) = schedule.pop().unwrap();
         now += step;
-        clock = next;
+        root = next;
     }
 
     for (label, ts, state) in history {
