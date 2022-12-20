@@ -1,0 +1,7 @@
+{
+    // see: https://github.com/rust-lang/rust-analyzer/issues/2649
+    "rust-analyzer.linkedProjects": [
+        // "robogen/Cargo.toml", // shhh it's a secret that this exists in the other branch
+        "robosim/Cargo.toml",
+    ]
+}
