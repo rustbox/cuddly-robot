@@ -1,82 +1,97 @@
 use std::io::Write;
 
+use bitflags::bitflags;
 
-#[derive(Debug, Copy, Clone)]
-struct PixelState {
-    hvis: bool,
-    hsync: bool,
-    vvis: bool,
-    vsync: bool,
-    frame_vis: bool,
-    end: bool
+bitflags! {
+    /// This is state of the vga timing at some "wide" pixel column.
+    /// The states expressed here are all in terms of "active high"
+    /// to make the logic easier to understand. 
+    /// For example, at pixel 0 is horizontally visible, so HVIS is set.
+    /// At pixel 41 it's in the blanking area (not visible) but the
+    /// horizontal sync pulse should be active, so HVIS is not set and
+    /// HSYNC is set.
+    struct PixelState: u8 {
+        const HVIS = 1;
+        const HSYNC = 1 << 1;
+        const VVIS = 1 << 2;
+        const VSYNC = 1 << 3;
+        const FRAME_VIS = 1 << 4;
+        const FRAME_NOT_VIS = 1 << 5;
+        const START_FRAME_WRITE = 1 << 6;
+        const END = 1 << 7;
+    }
 }
+
+impl PixelState {
+    /// These are the bits that are active low. So when converting to a byte
+    /// we can flip the bits into an active low domain, rather than the active high
+    fn active_low() -> PixelState {
+        PixelState::HSYNC | PixelState::VSYNC | PixelState::END
+    }
+}
+
 
 impl Default for PixelState {
     fn default() -> Self {
-        PixelState { hvis: false, hsync: true, vvis: false, vsync: true, frame_vis: false, end: false }
+        PixelState::HVIS | PixelState::VVIS
     }
 }
 
 impl From<PixelState> for u8 {
     fn from(p: PixelState) -> u8 {
-        p.hvis as u8 | (p.hsync as u8) << 1 | (p.vvis as u8) << 2 | (p.vsync as u8) << 3 | (p.frame_vis as u8) << 4 | (p.end as u8) << 5
+        (PixelState::active_low() ^ p).bits()
     }
 }
 
 const WIDTH: usize = 800 / 16;
 const HEIGHT: usize = 525;
 
-
 fn main() {
-    let mut timing = [PixelState::default(); WIDTH * HEIGHT + 1];
+    let mut timing = [PixelState::default(); WIDTH * HEIGHT];
 
     for line in 0..HEIGHT {
         for pixel in 0..WIDTH {
             let i = line * WIDTH + pixel;
-            let mut state = PixelState::default();
-            let mut repchar = '_';
-            if pixel < 40 {
-                state.hvis = true;
-            }
-            if pixel >= 41 && pixel < 47 {
-                // active low
-                state.hsync = false;
-            }
+
+            let mut state = PixelState::empty();
+            state.set(PixelState::HVIS, pixel < 40);
+            state.set(PixelState::HSYNC, pixel >= 41 && pixel < 47);
+            state.set(PixelState::VVIS, line >= 40 && line < 440);
+            state.set(PixelState::VSYNC, line >= 490 && line < 492);
+            state.set(PixelState::FRAME_VIS, state.contains(PixelState::HVIS) && state.contains(PixelState::VVIS));
+            state.set(PixelState::FRAME_NOT_VIS, !state.contains(PixelState::FRAME_VIS));
+            state.set(PixelState::START_FRAME_WRITE, i == 1488);
+            state.set(PixelState::END, i == WIDTH * HEIGHT - 1);
             
-            if line >= 40 && line < 440 {
-                state.vvis = true;
-            }
-            if line >= 490 && line < 492 {
-                // active low
-                state.vsync = false;
-            }
-            state.frame_vis = state.hvis && state.vvis;
-            if state.frame_vis {
+            let mut repchar = '_';
+            if state.contains(PixelState::FRAME_VIS) {
                 repchar = '.';
             }
-            if !state.hsync || !state.vsync {
+
+            if state.contains(PixelState::HSYNC) || state.contains(PixelState::VSYNC) {
                 repchar = '^';
             }
+
+            if state.contains(PixelState::END) {
+                repchar = 'x';
+            }
+
+            if state.contains(PixelState::START_FRAME_WRITE) {
+                repchar = '*'
+            }
+
             eprint!("{}", repchar);
             timing[i] = state;
         }
         eprintln!();
     }
-    let endstate = PixelState { end: true, ..Default::default() };
-    timing[WIDTH * HEIGHT] = endstate;
+    // timing[WIDTH * HEIGHT] = PixelState::END;
 
-    eprintln!("{:?}", timing[WIDTH * HEIGHT - 1]);
-    eprintln!("{:?}", timing[WIDTH * HEIGHT]);
+    eprintln!("end: {}", timing[WIDTH * HEIGHT - 1].bits);
 
     let mut prom_file = [0xff as u8; 32768];
     for i in 0..timing.len() {
         prom_file[i] = timing[i].into();
-        if i == WIDTH * HEIGHT - 1 {
-            eprintln!("i = {}: byte: {}", i, prom_file[i]);
-        }
-        if i == WIDTH * HEIGHT {
-            eprintln!("i = {}: byte: {}", i, prom_file[i]);
-        }
     }
 
     let _ = std::io::stdout().write_all(&prom_file);

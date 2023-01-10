@@ -1,13 +1,15 @@
 GAL16V8
 Test
 
-Clock NC    NC    NC    NC    NC    NC    NC    NC    GND
-/OE   NC    NC    NC    NC    NC    NC    NC    Q    VCC
+ NC   NC    NC    NC    NC    NC    NC    A     B    GND
+ NC    Q    y    x    NC    NC    NC    NC    NC   VCC
 
-Q = /Clock
+x = A * /B
+y = /A * B
+Q = x + y
 
 
 DESCRIPTION
 
-A NOT gate
+A NOT gateNC
 
