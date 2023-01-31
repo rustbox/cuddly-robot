@@ -24,3 +24,11 @@ Or to analyze multiple frames (here, 3) in succession:
 ```
 < <( for i in {0..2} ; do <robogen/timing.dat head -c "$((50*525+1))" ; done ) cargo run --manifest-path=robogen/Cargo.toml --bin analyze
 ```
+
+## Uploading
+
+Upload the `timing.dat` file onto the chip using the minipro programmer using the command:
+
+```
+minipro -p 'AT28C256' -w timing.dat
+```
