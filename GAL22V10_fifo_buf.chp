@@ -7,13 +7,13 @@
                           |                 |
                        NC |  2           23 | Half
                           |                 |
-                       NC |  3           22 | Rdy
+                       NC |  3           22 | Invert
                           |                 |
                        NC |  4           21 | O7
                           |                 |
                        NC |  5           20 | O6
                           |                 |
-                       NC |  6           19 | O5
+                 ToInvert |  6           19 | O5
                           |                 |
                        NC |  7           18 | O4
                           |                 |
