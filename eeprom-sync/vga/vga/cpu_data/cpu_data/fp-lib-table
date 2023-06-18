@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "plcc")(type "KiCad")(uri "${KIPRJMOD}")(options "")(descr ""))
+  (lib (name "plcc32")(type "KiCad")(uri "${KIPRJMOD}")(options "")(descr ""))
+)

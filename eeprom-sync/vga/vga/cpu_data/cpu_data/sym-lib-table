@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name "IDT7205L12JG")(type "KiCad")(uri "/home/dougli1sqrd/Downloads/IDT7205L12JG/KiCad/IDT7205L12JG.kicad_sym")(options "")(descr ""))
+  (lib (name "dual-memory-buffer")(type "KiCad")(uri "${KIPRJMOD}/dual-memory-buffer.kicad_sym")(options "")(descr ""))
 )
