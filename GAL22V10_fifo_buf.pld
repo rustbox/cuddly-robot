@@ -2,7 +2,7 @@ GAL22V10
 SIPO4to8
 
 Clock  Vis   Clk   NC    NC    NC    Rst   I0     I1    I2        I3    GND
-/OE    O0    O1    O2    O3    O4    O5    O6     O7    PxlClk    Half    VCC
+/OE    O0    O1    O2    O3    O4    O5    O6     O7    /Half    Half    VCC
 
 ; The value of Half is /Half once the clock is pulsed
 Half.R  = /Half
@@ -20,7 +20,7 @@ O1.R = O5
 O2.R = O6
 O3.R = O7
 
-AR = Rst
+AR = /Rst
 
 DESCRIPTION
 
