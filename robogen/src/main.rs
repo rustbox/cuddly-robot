@@ -60,7 +60,7 @@ fn main() {
             state.set(PixelState::VSYNC, line >= 490 && line < 492);
             state.set(PixelState::FRAME_VIS, state.contains(PixelState::HVIS) && state.contains(PixelState::VVIS));
             state.set(PixelState::FRAME_NOT_VIS, !state.contains(PixelState::FRAME_VIS));
-            state.set(PixelState::START_FRAME_WRITE, i == 1488);
+            state.set(PixelState::START_FRAME_WRITE, i != 1488);
             state.set(PixelState::END, i == WIDTH * HEIGHT - 1);
             
             let mut repchar = '_';
@@ -76,7 +76,7 @@ fn main() {
                 repchar = 'x';
             }
 
-            if state.contains(PixelState::START_FRAME_WRITE) {
+            if !state.contains(PixelState::START_FRAME_WRITE) {
                 repchar = '*'
             }
 
